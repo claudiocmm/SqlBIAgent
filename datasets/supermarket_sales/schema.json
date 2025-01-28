@@ -1,0 +1,104 @@
+[
+  {
+    "name": "Invoice ID",
+    "type": "STRING",
+    "mode": "NULLABLE",
+    "description": "Computer generated sales slip invoice identification number"
+  },
+  {
+    "name": "Branch",
+    "type": "STRING",
+    "mode": "NULLABLE",
+    "description": "Branch of supercenter (3 branches are available identified by A, B and C)."
+  },
+  {
+    "name": "City",
+    "type": "STRING",
+    "mode": "NULLABLE",
+    "description": "Location of supercenters"
+  },
+  {
+    "name": "Customer type",
+    "type": "STRING",
+    "mode": "NULLABLE",
+    "description": "Type of customers, recorded by 'Member' for customers using member card and 'Normal' for without member card"
+  },
+  {
+    "name": "Gender",
+    "type": "STRING",
+    "mode": "NULLABLE",
+    "description": "Gender type of customer"
+  },
+  {
+    "name": "Product line",
+    "type": "STRING",
+    "mode": "NULLABLE",
+    "description": "General item categorization groups"
+  },
+  {
+    "name": "Unit price",
+    "type": "FLOAT",
+    "mode": "NULLABLE",
+    "description": "Price of each product in $"
+  },
+  {
+    "name": "Quantity",
+    "type": "INTEGER",
+    "mode": "NULLABLE",
+    "description": "Number of products purchased by customer"
+  },
+  {
+    "name": "Tax 5%",
+    "type": "FLOAT",
+    "mode": "NULLABLE",
+    "description": "5% tax fee for customer buying"
+  },
+  {
+    "name": "Total",
+    "type": "FLOAT",
+    "mode": "NULLABLE",
+    "description": "Total price including tax"
+  },
+  {
+    "name": "Date",
+    "type": "STRING",
+    "mode": "NULLABLE",
+    "description": "Date of purchase"
+  },
+  {
+    "name": "Time",
+    "type": "STRING",
+    "mode": "NULLABLE",
+    "description": "Purchase time"
+  },
+  {
+    "name": "Payment",
+    "type": "STRING",
+    "mode": "NULLABLE",
+    "description": "Payment used by customer for purchase"
+  },
+  {
+    "name": "cogs",
+    "type": "FLOAT",
+    "mode": "NULLABLE",
+    "description": "Cost of goods sold"
+  },
+  {
+    "name": "gross margin percentage",
+    "type": "FLOAT",
+    "mode": "NULLABLE",
+    "description": "Gross margin percentage"
+  },
+  {
+    "name": "gross income",
+    "type": "FLOAT",
+    "mode": "NULLABLE",
+    "description": "Gross income"
+  },
+  {
+    "name": "Rating",
+    "type": "FLOAT",
+    "mode": "NULLABLE",
+    "description": "Customer stratification rating on their overall shopping experience (On a scale of 1 to 10)"
+  }
+]
