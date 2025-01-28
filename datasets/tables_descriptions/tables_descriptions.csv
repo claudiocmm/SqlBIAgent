@@ -1,0 +1,5 @@
+project_id,dataset_id,table_id,description
+analytics-449112,datalake,hotel_bookings,Table with all record of bookings in hotels
+analytics-449112,datalake,netflix_movies_and_tv_shows,Table with all Netflix movies and tv shows 
+analytics-449112,datalake,supermarket_sales,Sales of different supermarkets
+analytics-449112,datalake,video_games_sales,Sales of video games around the world

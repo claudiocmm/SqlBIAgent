@@ -1,0 +1,74 @@
+[
+  {
+    "name": "show_id",
+    "type": "STRING",
+    "mode": "NULLABLE",
+    "description": "Unique ID for every Movie / Tv Show"
+  },
+  {
+    "name": "type",
+    "type": "STRING",
+    "mode": "NULLABLE",
+    "description": "Identifier - Movie or TV Show"
+  },
+  {
+    "name": "title",
+    "type": "STRING",
+    "mode": "NULLABLE",
+    "description": "Title"
+  },
+  {
+    "name": "director",
+    "type": "STRING",
+    "mode": "NULLABLE",
+    "description": "Director of the Movie"
+  },
+  {
+    "name": "cast",
+    "type": "STRING",
+    "mode": "NULLABLE",
+    "description": "Actors involved in the movie / show"
+  },
+  {
+    "name": "country",
+    "type": "STRING",
+    "mode": "NULLABLE",
+    "description": "Country where the movie / show was produced"
+  },
+  {
+    "name": "date_added",
+    "type": "STRING",
+    "mode": "NULLABLE",
+    "description": "Date it was added on Netflix (format: 'Month day, Year') "
+  },
+  {
+    "name": "release_year",
+    "type": "INTEGER",
+    "mode": "NULLABLE",
+    "description": "Actual Release year of the move / show"
+  },
+  {
+    "name": "rating",
+    "type": "STRING",
+    "mode": "NULLABLE",
+    "description": "TV Rating of the movie / show"
+  },
+  {
+    "name": "duration",
+    "type": "STRING",
+    "mode": "NULLABLE",
+    "description": "Total Duration - in minutes or number of seasons"
+  },
+  {
+    "name": "listed_in",
+    "type": "STRING",
+    "mode": "NULLABLE",
+    "description": "Genre of movie or tv show"
+  },
+  {
+    "name": "description",
+    "type": "STRING",
+    "mode": "NULLABLE",
+    "description": "The summary description"
+  }
+]

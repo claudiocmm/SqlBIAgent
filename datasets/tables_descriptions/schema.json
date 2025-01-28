@@ -1,0 +1,26 @@
+[
+  {
+    "name": "project_id",
+    "type": "STRING",
+    "mode": "NULLABLE",
+    "description": "Project of GCP"
+  },
+  {
+    "name": "dataset_id",
+    "type": "STRING",
+    "mode": "NULLABLE",
+    "description": "Dataset BigQuery"
+  },
+  {
+    "name": "table_id",
+    "type": "STRING",
+    "mode": "NULLABLE",
+    "description": "Table BigQuery"
+  },
+  {
+    "name": "description",
+    "type": "STRING",
+    "mode": "NULLABLE",
+    "description": "Description of Table"
+  }
+]

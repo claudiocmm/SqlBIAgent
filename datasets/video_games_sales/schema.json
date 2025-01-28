@@ -1,0 +1,68 @@
+[
+  {
+    "name": "Rank",
+    "type": "INTEGER",
+    "mode": "NULLABLE",
+    "description": "rank of sales"
+  },
+  {
+    "name": "Name",
+    "type": "STRING",
+    "mode": "NULLABLE",
+    "description": "Name of video game"
+  },
+  {
+    "name": "Platform",
+    "type": "STRING",
+    "mode": "NULLABLE",
+    "description": "Platform of video game"
+  },
+  {
+    "name": "Year",
+    "type": "FLOAT",
+    "mode": "NULLABLE",
+    "description": "Year of release"
+  },
+  {
+    "name": "Genre",
+    "type": "STRING",
+    "mode": "NULLABLE",
+    "description": "Genre of game"
+  },
+  {
+    "name": "Publisher",
+    "type": "STRING",
+    "mode": "NULLABLE",
+    "description": "Company publisher"
+  },
+  {
+    "name": "NA_Sales",
+    "type": "FLOAT",
+    "mode": "NULLABLE",
+    "description": "North American Sales"
+  },
+  {
+    "name": "EU_Sales",
+    "type": "FLOAT",
+    "mode": "NULLABLE",
+    "description": "Europe Sales"
+  },
+  {
+    "name": "JP_Sales",
+    "type": "FLOAT",
+    "mode": "NULLABLE",
+    "description": "Japan Sales"
+  },
+  {
+    "name": "Other_Sales",
+    "type": "FLOAT",
+    "mode": "NULLABLE",
+    "description": "Other Sales"
+  },
+  {
+    "name": "Global_Sales",
+    "type": "FLOAT",
+    "mode": "NULLABLE",
+    "description": "Global Sales"
+  }
+]

@@ -121,6 +121,22 @@ def generate_schema_from_dataframe(df: pd.DataFrame, output_path: str, descripti
         
     return schema
 
+def convert_schema_json_to_bq_schemafield(schema_json):
+    """Recursively build BigQuery schema with nested fields"""
+    schema = []
+    for field in schema_json:
+        subschema = []
+        if 'fields' in field:
+            subschema = convert_schema_json_to_bq_schemafield(field['fields'])
+        schema_field = bigquery.SchemaField(
+            name=field['name'],
+            field_type=field['type'],
+            mode=field.get('mode', 'NULLABLE'),
+            description=field.get('description', ''),
+            fields=subschema
+        )
+        schema.append(schema_field)
+    return schema
 
 
 def csv_to_bigquery(project_id, dataset_id, table_id, csv_path, schema_path, 
@@ -145,16 +161,7 @@ def csv_to_bigquery(project_id, dataset_id, table_id, csv_path, schema_path,
         schema_json = json.load(f)
     
     # Convert JSON schema to BigQuery SchemaField objects
-    schema = []
-    for field in schema_json:
-        schema.append(
-            bigquery.SchemaField(
-                name=field["name"],
-                field_type=field["type"],
-                mode=field.get("mode", "NULLABLE"),
-                description=field.get("description", "")
-            )
-        )
+    schema = convert_schema_json_to_bq_schemafield(schema_json)
 
     # Configure load job
     job_config = bigquery.LoadJobConfig(
