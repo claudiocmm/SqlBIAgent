@@ -1,12 +1,10 @@
 import re
 
-def extract_only_sql_query(input_str: str) -> str: 
+def extract_code_block(content: str, language: str) -> str: 
     try:
-        sql_query = re.search(r'```sql(.*?)```', input_str, re.DOTALL)
-        output = sql_query.group(1)
-
-    #sometimes the LLM forget to remove the backticks in the end
+        match = re.search(rf'```{language}(.*?)```', content, re.DOTALL)
+        extracted_code = match.group(1)
     except Exception:
-        output = input_str.replace("```sql","")
+        extracted_code = content.replace(f"```{language}", "")
 
-    return output
+    return extracted_code

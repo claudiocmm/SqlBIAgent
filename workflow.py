@@ -17,18 +17,26 @@ from google.api_core.exceptions import BadRequest, Forbidden
 import bq_functions
 import utils
 import json
+import pandas as pd
 
 class AgentState(TypedDict):
     question: str
     database_schemas: str
     query: str
-    num_retries_debug: int
-    max_num_retries_debug: int
-    result_debug: str
-    error_msg_debug: str
+    num_retries_debug_sql: int
+    max_num_retries_debug_sql: int
+    result_debug_sql: str
+    error_msg_debug_sql: str
+    df: pd.DataFrame
+    visualization_request: str
+    python_code_data_visualization: str
+    num_retries_debug_python_code_data_visualization: int
+    max_num_retries_debug_python_code_data_visualization: int
+    result_debug_python_code_data_visualization: str
+    error_msg_debug_python_code_data_visualization: str
 
 
-llm = ChatGroq(model="llama3-8b-8192", temperature=0)
+llm = ChatGroq(model="llama3-70b-8192", temperature=0)
 
 retriever = VertexAISearchRetriever(
     project_id=settings.project_id,
@@ -68,26 +76,9 @@ def agent_sql_writer_node(state: AgentState) -> AgentState:
 
     response = chain.invoke({"question": state["question"], 
                              "database_schemas": state["database_schemas"]}).content
-    state["query"] = utils.extract_only_sql_query(response)
+    state["query"] = utils.extract_code_block(content=response,language="sql")
     print(f"### Agent SQL Writer query:\n {state["query"]}")
     return state
-
-    
-
-# def agent_sql_reviewer_node(state: AgentState) -> AgentState:
-#     print(f"Running SQL agent reviewer, revision {state["num_retries_debug"]}")
-#     prompt_template = ChatPromptTemplate(("system", prompts.system_prompt_agent_sql_reviewer_node))
-
-#     chain = prompt_template | llm
-
-#     response = chain.invoke({"query": state["query"], 
-#                              "database_schemas": state["database_schemas"], 
-#                              "error_msg_debug": state["error_msg_debug"]}).content
-
-#     state["query"] = utils.extract_only_sql_query(response)
-#     print(f"### Query reviewed:\n {state["query"]}")
-
-#     return state
 
 
 
@@ -95,7 +86,7 @@ def agent_sql_validator_node(state: AgentState) -> AgentState:
     bq_client = bigquery.Client(settings.project_id) 
     
 
-    print("### Debugging query:")
+    print("\n\n### Validating query:")
     
     try:
         query = state["query"]
@@ -103,45 +94,119 @@ def agent_sql_validator_node(state: AgentState) -> AgentState:
         job_config = bigquery.QueryJobConfig(dry_run=True)
         # Start the query as a job (will not execute due to dry_run=True)
         query_job = bq_client.query(query, job_config=job_config)
-        state["result_debug"] = "Pass"
-        state["error_msg_debug"] = ""
-        print(f"result: {state["result_debug"]}")
+        state["result_debug_sql"] = "Pass"
+        state["error_msg_debug_sql"] = ""
+        print(f"result: {state["result_debug_sql"]}")
 
         return state
         
     except Exception as e:
-        state["num_retries_debug"] += 1
+        state["num_retries_debug_sql"] += 1
 
         # return False, f"Error validating query: {str(e)}"
-        state["result_debug"] = "Not Pass"
-        state["error_msg_debug"] = str(e)
-        print(f"result: {state["result_debug"]}")
-        print(f'error message: {state["error_msg_debug"]}')
+        state["result_debug_sql"] = "Not Pass"
+        state["error_msg_debug_sql"] = str(e)
+        print(f"result: {state["result_debug_sql"]}")
+        print(f'error message: {state["error_msg_debug_sql"]}')
 
         #trying to fix the query
-        print("### Trying to fix the query:")
+        print("\n### Trying to fix the query:")
         prompt_template = ChatPromptTemplate(("system", prompts.system_prompt_agent_sql_validator_node))
 
         chain = prompt_template | llm
 
 
         response = chain.invoke({"query": state["query"], 
-                                "error_msg_debug": state["error_msg_debug"]}).content
+                                "error_msg_debug": state["error_msg_debug_sql"]}).content
 
-        print(response)
-        state["query"] = utils.extract_only_sql_query(response)
-        print(f"### Query adjusted:\n {state["query"]}")
+        state["query"] = utils.extract_code_block(content=response,language="sql")
+        print(f"\n### Query adjusted:\n {state["query"]}")
 
         return state
 
 
-def execute_query_node(state: AgentState):
+def execute_query_node(state: AgentState) -> AgentState:
     # Initialize the BigQuery client
     bq_client = bigquery.Client(settings.project_id)
 
     df = bq_client.query(state["query"]).to_dataframe()
 
-    print(df)
+    state["df"] = df
+
+    return state
+
+
+def agent_bi_expert_node(state: AgentState) -> AgentState:
+    
+    prompt_template = ChatPromptTemplate(("system", prompts.system_prompt_agent_bi_expert_node))
+
+    chain = prompt_template | llm
+
+    response = chain.invoke({"question": state["question"],
+                             "query": state["query"],
+                             "df_structure": state["df"].dtypes,
+                             "df_sample": state["df"].head(5)
+                             }).content
+
+    state["visualization_request"] = response
+    print(f"\n### Visualization Request:\n {state["visualization_request"]}")
+
+    return state
+
+
+def agent_python_code_data_visualization_generator_node(state: AgentState) -> AgentState:
+
+    prompt_template = ChatPromptTemplate(("system", prompts.system_prompt_agent_python_code_data_visualization_generator_node))
+
+    chain = prompt_template | llm
+
+    response = chain.invoke({"visualization_request": state["visualization_request"],
+                             "df_structure": state["df"].dtypes,
+                             "df_sample": state["df"].head(5)
+                             }).content
+    state["python_code_data_visualization"] = utils.extract_code_block(content=response,language="python")
+
+
+    return state
+
+
+def agent_python_code_data_visualization_validator_node(state: AgentState) -> AgentState:    
+
+    print("\n\n### Validating data visualization code:")
+    
+    try:
+        df = state["df"]
+        exec(state["python_code_data_visualization"])
+        state["result_debug_python_code_data_visualization"] = "Pass"
+        state["error_msg_debug_python_code_data_visualization"] = ""
+        print(f"result: {state["result_debug_python_code_data_visualization"]}")
+
+        return state
+        
+    except Exception as e:
+        state["num_retries_debug_python_code_data_visualization"] += 1
+
+        # return False, f"Error validating query: {str(e)}"
+        state["result_debug_python_code_data_visualization"] = "Not Pass"
+        state["error_msg_debug_python_code_data_visualization"] = str(e)
+        print(f"result: {state["result_debug_python_code_data_visualization"]}")
+        print(f'error message: {state["error_msg_debug_python_code_data_visualization"]}')
+
+        #trying to fix the query
+        print("\n### Trying to fix the plotly code:")
+        prompt_template = ChatPromptTemplate(("system", prompts.system_prompt_agent_python_code_data_visualization_validator_node))
+
+        chain = prompt_template | llm
+
+
+        response = chain.invoke({"python_code_data_visualization": state["python_code_data_visualization"], 
+                                "error_msg_debug": state["error_msg_debug_python_code_data_visualization"]}).content
+
+        state["python_code_data_visualization"] = utils.extract_code_block(content=response,language="python")
+
+        print(f"\n### Plotly code adjusted:\n {state["python_code_data_visualization"]}")
+
+        return state
 
 
 workflow = StateGraph(state_schema=AgentState)
@@ -152,19 +217,34 @@ workflow.add_node("agent_sql_writer_node",agent_sql_writer_node)
 # workflow.add_node("agent_sql_reviewer_node",agent_sql_reviewer_node)
 workflow.add_node("agent_sql_validator_node",agent_sql_validator_node)
 workflow.add_node("execute_query_node",execute_query_node)
+workflow.add_node("agent_bi_expert_node",agent_bi_expert_node)
+workflow.add_node("agent_python_code_data_visualization_generator_node",agent_python_code_data_visualization_generator_node)
+workflow.add_node("agent_python_code_data_visualization_validator_node",agent_python_code_data_visualization_validator_node)
 
 
 workflow.add_edge("search_tables_and_schemas","agent_sql_writer_node")
 # workflow.add_edge("agent_sql_writer_node","agent_sql_reviewer_node")
 workflow.add_edge("agent_sql_writer_node","agent_sql_validator_node")
+
 workflow.add_conditional_edges(
     'agent_sql_validator_node',
     lambda state: 'execute_query_node' 
-    if state['result_debug']=="Pass" or state['num_retries_debug'] >= state['max_num_retries_debug'] 
+    if state['result_debug_sql']=="Pass" or state['num_retries_debug_sql'] >= state['max_num_retries_debug_sql'] 
     else 'agent_sql_validator_node',
     {'execute_query_node': 'execute_query_node', 'agent_sql_validator_node': 'agent_sql_validator_node'}
 )
-workflow.add_edge("execute_query_node",END)
+workflow.add_edge("execute_query_node","agent_bi_expert_node")
+workflow.add_edge("agent_bi_expert_node","agent_python_code_data_visualization_generator_node")
+workflow.add_edge("agent_python_code_data_visualization_generator_node","agent_python_code_data_visualization_validator_node")
+
+workflow.add_conditional_edges(
+    'agent_python_code_data_visualization_validator_node',
+    lambda state: "end" 
+    if state['result_debug_python_code_data_visualization']=="Pass" or state['num_retries_debug_python_code_data_visualization'] >= state['max_num_retries_debug_python_code_data_visualization'] 
+    else 'agent_python_code_data_visualization_validator_node',
+    {'end': END,'agent_python_code_data_visualization_validator_node': 'agent_python_code_data_visualization_validator_node'}
+)
+
 
 workflow.set_entry_point("search_tables_and_schemas")
 
@@ -177,13 +257,21 @@ def run_workflow(question: str) -> dict:
         question = question,
         database_schemas = "",
         query = "",
-        num_retries_debug = 0,
-        max_num_retries_debug = 2,
-        result_debug = "",
-        error_msg_debug = ""
+        num_retries_debug_sql = 0,
+        max_num_retries_debug_sql = 3,
+        result_debug_sql = "",
+        error_msg_debug_sql = "",
+        df = pd.DataFrame(),
+        visualization_request = "",
+        python_code_data_visualization = "",
+        num_retries_debug_python_code_data_visualization = 0,
+        max_num_retries_debug_python_code_data_visualization = 3,
+        result_debug_python_code_data_visualization = "",
+        error_msg_debug_python_code_data_visualization = ""
     )
     result = app.invoke(initial_state)
     return result
 
-run_workflow(question = "What are the released years with more released movies and tv shows in netflix. Show me a top 10 by two categories (movie and tv show)")
-# run_workflow(question = "How many movies were released in 2020 in netflix?")
+# state = run_workflow(question = "What are the released years with more released movies and tv shows in netflix. Show me a top 10 by two categories (movie and tv show)")
+# state = run_workflow(question = "How many movies were released in 2020 in netflix?") 
+# state = run_workflow(question = "What are the 3 video game platforms more sold in the history?") 
