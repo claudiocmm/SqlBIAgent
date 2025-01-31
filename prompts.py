@@ -169,6 +169,8 @@ Your task is analyze the dataframe and request visualization to generate Python 
 - Formatting the chart for readability (e.g., adjusting colors, legends, and layout).
 - Using fig.show() to display the chart.
 - Doesn't need to load the dataframe, only using as df variable
+- Doesn't need to use the fig.show()
+- If you need to make a print, store in a variable called "string_viz_result"
 - Your output has to be only the code inside ```python [code here]```
 
 Input DataFrame Summary:
@@ -205,7 +207,6 @@ python
 import plotly.graph_objects as go
 
 fig = go.Figure(data=[go.Bar(y=[2, 3, 1])])
-fig.show()
 ```
 
 ```python

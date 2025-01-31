@@ -6,3 +6,4 @@ google-cloud-bigquery-storage==2.27.0
 google-cloud-bigquery==3.29.0
 plotly==6.0.0
 nbformat==5.10.4
+streamlit==1.41.1

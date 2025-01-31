@@ -19,19 +19,20 @@ import utils
 import json
 import pandas as pd
 
+
 class AgentState(TypedDict):
     question: str
     database_schemas: str
     query: str
+    max_num_retries_debug: int
     num_retries_debug_sql: int
-    max_num_retries_debug_sql: int
     result_debug_sql: str
     error_msg_debug_sql: str
     df: pd.DataFrame
     visualization_request: str
     python_code_data_visualization: str
+    python_code_store_variables_dict: dict
     num_retries_debug_python_code_data_visualization: int
-    max_num_retries_debug_python_code_data_visualization: int
     result_debug_python_code_data_visualization: str
     error_msg_debug_python_code_data_visualization: str
 
@@ -40,8 +41,8 @@ llm = ChatGroq(model="llama3-70b-8192", temperature=0)
 
 retriever = VertexAISearchRetriever(
     project_id=settings.project_id,
-    location_id="global",
-    data_store_id="tables-descriptions_1738087630151",
+    location_id=settings.vertex_agent_builder_data_store_location_id,
+    data_store_id=settings.vertex_agent_builder_data_store_id,
     max_documents=2,
     engine_data_type=1
 )
@@ -166,6 +167,7 @@ def agent_python_code_data_visualization_generator_node(state: AgentState) -> Ag
                              }).content
     state["python_code_data_visualization"] = utils.extract_code_block(content=response,language="python")
 
+    print(f"\n### Data visualization code:\n {state["python_code_data_visualization"]}")
 
     return state
 
@@ -176,7 +178,10 @@ def agent_python_code_data_visualization_validator_node(state: AgentState) -> Ag
     
     try:
         df = state["df"]
-        exec(state["python_code_data_visualization"])
+        # Create a dictionary to store the executed variables for the python code generated
+        exec_globals = {"df": df}
+        exec(state["python_code_data_visualization"], exec_globals)
+        state["python_code_store_variables_dict"] = exec_globals
         state["result_debug_python_code_data_visualization"] = "Pass"
         state["error_msg_debug_python_code_data_visualization"] = ""
         print(f"result: {state["result_debug_python_code_data_visualization"]}")
@@ -229,7 +234,7 @@ workflow.add_edge("agent_sql_writer_node","agent_sql_validator_node")
 workflow.add_conditional_edges(
     'agent_sql_validator_node',
     lambda state: 'execute_query_node' 
-    if state['result_debug_sql']=="Pass" or state['num_retries_debug_sql'] >= state['max_num_retries_debug_sql'] 
+    if state['result_debug_sql']=="Pass" or state['num_retries_debug_sql'] >= state['max_num_retries_debug'] 
     else 'agent_sql_validator_node',
     {'execute_query_node': 'execute_query_node', 'agent_sql_validator_node': 'agent_sql_validator_node'}
 )
@@ -240,7 +245,7 @@ workflow.add_edge("agent_python_code_data_visualization_generator_node","agent_p
 workflow.add_conditional_edges(
     'agent_python_code_data_visualization_validator_node',
     lambda state: "end" 
-    if state['result_debug_python_code_data_visualization']=="Pass" or state['num_retries_debug_python_code_data_visualization'] >= state['max_num_retries_debug_python_code_data_visualization'] 
+    if state['result_debug_python_code_data_visualization']=="Pass" or state['num_retries_debug_python_code_data_visualization'] >= state['max_num_retries_debug'] 
     else 'agent_python_code_data_visualization_validator_node',
     {'end': END,'agent_python_code_data_visualization_validator_node': 'agent_python_code_data_visualization_validator_node'}
 )
@@ -258,19 +263,19 @@ def run_workflow(question: str) -> dict:
         database_schemas = "",
         query = "",
         num_retries_debug_sql = 0,
-        max_num_retries_debug_sql = 3,
+        max_num_retries_debug = 3,
         result_debug_sql = "",
         error_msg_debug_sql = "",
         df = pd.DataFrame(),
         visualization_request = "",
         python_code_data_visualization = "",
+        python_code_store_variables_dict = {},
         num_retries_debug_python_code_data_visualization = 0,
-        max_num_retries_debug_python_code_data_visualization = 3,
         result_debug_python_code_data_visualization = "",
         error_msg_debug_python_code_data_visualization = ""
     )
-    result = app.invoke(initial_state)
-    return result
+    final_state = app.invoke(initial_state)
+    return final_state
 
 # state = run_workflow(question = "What are the released years with more released movies and tv shows in netflix. Show me a top 10 by two categories (movie and tv show)")
 # state = run_workflow(question = "How many movies were released in 2020 in netflix?") 
