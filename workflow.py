@@ -1,19 +1,13 @@
 from typing import Dict, TypedDict
 from langgraph.graph import StateGraph, START, END
-from langchain.schema import HumanMessage, SystemMessage
 from langchain_groq import ChatGroq
-from langchain_ollama import ChatOllama
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_google_community import (
     VertexAISearchRetriever,
 )
-from dotenv import load_dotenv
-from langchain_core.output_parsers import JsonOutputParser
-import os
 import prompts
 import settings
 from google.cloud import bigquery
-from google.api_core.exceptions import BadRequest, Forbidden
 import bq_functions
 import utils
 import json
