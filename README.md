@@ -3,7 +3,7 @@
 ## Overview
 SQL BI Agent is a powerful Streamlit application that allows users to ask natural language questions about their data in BigQuery and receive instant SQL queries with visualizations. It leverages LangGraph workflows, LLM-based query generation, and automatic validation to ensure accuracy.
 
-For a detailed explanation, check out our Medium post: [Medium Article](your-medium-url-here)
+For a detailed explanation, check out my Medium post: [Medium Article](https://medium.com/@claudiofilho22/creating-a-sql-bi-agent-using-langgraph-vertex-ai-agent-builder-9c497d38de53)
 
 ## Features
 - **Natural Language to SQL**: Converts user questions into SQL queries.
@@ -62,7 +62,7 @@ To set up and run the SQL BI Agent locally, follow these steps:
 ```
 
 ## Author  
-Claudio César  
+Cláudio César  
 
 [![LinkedIn](https://img.shields.io/badge/LinkedIn-Profile-blue?logo=linkedin)](https://www.linkedin.com/in/claudio-c%C3%A9sar-506961164/)
 
