@@ -3,7 +3,7 @@
     "name": "hotel",
     "type": "STRING",
     "mode": "NULLABLE",
-    "description": "Hotel (H1 = Resort Hotel or H2 = City Hotel)"
+    "description": "Hotel ('Resort Hotel' or 'City Hotel')"
   },
   {
     "name": "is_canceled",
