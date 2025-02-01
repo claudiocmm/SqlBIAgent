@@ -31,11 +31,12 @@ class AgentState(TypedDict):
     error_msg_debug_python_code_data_visualization: str
 
 
-llm = ChatGroq(model="llama3-70b-8192", temperature=0)
+llm = ChatGroq(model="llama3-70b-8192", temperature=0.3)
+max_characters_error_msg_debug = 300
 
 retriever = VertexAISearchRetriever(
     project_id=settings.project_id,
-    location_id=settings.vertex_agent_builder_data_store_location_id,
+    location_id=settings.vertex_agent_builder_data_store_location,
     data_store_id=settings.vertex_agent_builder_data_store_id,
     max_documents=2,
     engine_data_type=1
@@ -89,6 +90,11 @@ def agent_sql_validator_node(state: AgentState) -> AgentState:
         job_config = bigquery.QueryJobConfig(dry_run=True)
         # Start the query as a job (will not execute due to dry_run=True)
         query_job = bq_client.query(query, job_config=job_config)
+        
+        #after dry_run, try to store the dataframe
+        df = bq_client.query(state["query"]).to_dataframe()
+        state["df"] = df
+
         state["result_debug_sql"] = "Pass"
         state["error_msg_debug_sql"] = ""
         print(f"result: {state["result_debug_sql"]}")
@@ -100,7 +106,7 @@ def agent_sql_validator_node(state: AgentState) -> AgentState:
 
         # return False, f"Error validating query: {str(e)}"
         state["result_debug_sql"] = "Not Pass"
-        state["error_msg_debug_sql"] = str(e)
+        state["error_msg_debug_sql"] = str(e)[0:max_characters_error_msg_debug]
         print(f"result: {state["result_debug_sql"]}")
         print(f'error message: {state["error_msg_debug_sql"]}')
 
@@ -119,16 +125,6 @@ def agent_sql_validator_node(state: AgentState) -> AgentState:
 
         return state
 
-
-def execute_query_node(state: AgentState) -> AgentState:
-    # Initialize the BigQuery client
-    bq_client = bigquery.Client(settings.project_id)
-
-    df = bq_client.query(state["query"]).to_dataframe()
-
-    state["df"] = df
-
-    return state
 
 
 def agent_bi_expert_node(state: AgentState) -> AgentState:
@@ -187,7 +183,7 @@ def agent_python_code_data_visualization_validator_node(state: AgentState) -> Ag
 
         # return False, f"Error validating query: {str(e)}"
         state["result_debug_python_code_data_visualization"] = "Not Pass"
-        state["error_msg_debug_python_code_data_visualization"] = str(e)
+        state["error_msg_debug_python_code_data_visualization"] = str(e)[0:max_characters_error_msg_debug]
         print(f"result: {state["result_debug_python_code_data_visualization"]}")
         print(f'error message: {state["error_msg_debug_python_code_data_visualization"]}')
 
@@ -213,26 +209,22 @@ workflow = StateGraph(state_schema=AgentState)
 
 workflow.add_node("search_tables_and_schemas",search_tables_and_schemas)
 workflow.add_node("agent_sql_writer_node",agent_sql_writer_node)
-# workflow.add_node("agent_sql_reviewer_node",agent_sql_reviewer_node)
 workflow.add_node("agent_sql_validator_node",agent_sql_validator_node)
-workflow.add_node("execute_query_node",execute_query_node)
 workflow.add_node("agent_bi_expert_node",agent_bi_expert_node)
 workflow.add_node("agent_python_code_data_visualization_generator_node",agent_python_code_data_visualization_generator_node)
 workflow.add_node("agent_python_code_data_visualization_validator_node",agent_python_code_data_visualization_validator_node)
 
 
 workflow.add_edge("search_tables_and_schemas","agent_sql_writer_node")
-# workflow.add_edge("agent_sql_writer_node","agent_sql_reviewer_node")
 workflow.add_edge("agent_sql_writer_node","agent_sql_validator_node")
 
 workflow.add_conditional_edges(
     'agent_sql_validator_node',
-    lambda state: 'execute_query_node' 
+    lambda state: 'agent_bi_expert_node' 
     if state['result_debug_sql']=="Pass" or state['num_retries_debug_sql'] >= state['max_num_retries_debug'] 
     else 'agent_sql_validator_node',
-    {'execute_query_node': 'execute_query_node', 'agent_sql_validator_node': 'agent_sql_validator_node'}
+    {'agent_bi_expert_node': 'agent_bi_expert_node','agent_sql_validator_node': 'agent_sql_validator_node'}
 )
-workflow.add_edge("execute_query_node","agent_bi_expert_node")
 workflow.add_edge("agent_bi_expert_node","agent_python_code_data_visualization_generator_node")
 workflow.add_edge("agent_python_code_data_visualization_generator_node","agent_python_code_data_visualization_validator_node")
 

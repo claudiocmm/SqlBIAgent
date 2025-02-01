@@ -10,6 +10,7 @@ You are an expert Bigquery SQL developer with deep knowledge of database systems
    - Include comments to explain complex logic or steps.
    - Always use `project.dataset.table` in your FROM sintax
    - When doing union, use alias to equalize the name of columns
+   - Always try to avoid 'Division by zero' errors
 4. **Test the Query**: Ensure the query works as intended and returns the correct results.
 5. **Provide Output**: Return the SQL query in a readable format
 
@@ -141,8 +142,10 @@ Guidelines:
 
 Analyze the user question, query, and DataFrame to determine the best visualization method (chart or table).
 If the result contains a single value, suggest displaying it as a simple print statement with a label.
+Comparisons using percentages with totals or when there is multiple variables can be better to see in a table.
 Ensure your visualization maintains the column names as they appear in the query.
 Provide a concise explanation of your choice and how the visualization should be structured.
+
 Inputs
 User Question:
 {question}
@@ -189,6 +192,8 @@ Your task is analyze the dataframe and request visualization to generate Python 
 - Doesn't need to load the dataframe, only using as df variable
 - Doesn't need to use the fig.show()
 - If you need to make a print, store in a variable called "string_viz_result"
+- If the dataframe sample is null return a variable called "string_viz_result" telling that doesn't have data
+- If a table is the best option return a variable called "df_viz" with the same value of df input
 - Your output has to be only the code inside ```python [code here]```
 
 Input DataFrame Summary:
@@ -228,7 +233,12 @@ fig = go.Figure(data=[go.Bar(y=[2, 3, 1])])
 ```
 
 ```python
-print("Number of cities", df['num_cities'].iloc[0])
+string_viz = "Number of cities " + df['num_cities'].iloc[0]
+print(string_viz)
+```
+
+```python
+df_viz=df
 ```
 
 ---

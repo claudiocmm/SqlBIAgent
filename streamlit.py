@@ -44,8 +44,12 @@ if st.button("Run") and question:
             st.subheader("Result")
             fig = langraph_state.get("python_code_store_variables_dict").get("fig", None)
             string_viz_result = langraph_state.get("python_code_store_variables_dict").get("string_viz_result", None)
+            df_viz = langraph_state.get("python_code_store_variables_dict").get("df_viz", None)
             if fig is None:
-                st.markdown(string_viz_result)
+                if df_viz is not None:
+                    st.table(df_viz)
+                else:
+                    st.markdown(string_viz_result)
             else:
                 st.plotly_chart(fig)
                 
