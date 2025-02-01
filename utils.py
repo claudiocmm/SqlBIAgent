@@ -5,6 +5,6 @@ def extract_code_block(content: str, language: str) -> str:
         match = re.search(rf'```{language}(.*?)```', content, re.DOTALL)
         extracted_code = match.group(1)
     except Exception:
-        extracted_code = content.replace(f"```{language}", "")
+        extracted_code = content.replace(f"```", "")
 
     return extracted_code
