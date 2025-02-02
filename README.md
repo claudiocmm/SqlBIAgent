@@ -11,8 +11,17 @@ For a detailed explanation, check out my Medium post: [Medium Article](https://m
 - **Interactive Data Visualization**: Generates and validates Python visualization code.
 - **Streamlit UI**: User-friendly interface for asking questions and viewing results.
 
+
+## Create datasets bigquery
+Once your GCP account is set up and the environment variables in settings.py are properly configured, you can upload the datasets to BigQuery by running the following command:
+
+```bash
+   python upload_datasets_in_bq.py
+```
+This script will automatically load the datasets into BigQuery, ensuring they are ready for use.
+
 ## Installation
-To set up and run the SQL BI Agent locally, follow these steps:
+To run the SQL BI Agent locally, follow these steps:
 
 ### Steps
 1. Clone the repository:
